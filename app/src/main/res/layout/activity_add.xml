@@ -13,17 +13,19 @@
         android:layout_marginRight="40dp"
         android:layout_marginBottom="20dp"
         android:layout_weight="1"
-        android:background="@drawable/draw_bound"/>
+        android:background="@drawable/draw_bound"
+        android:adjustViewBounds="true"/>
     <EditText
         android:id="@+id/editText"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginLeft="40dp"
         android:layout_marginRight="40dp"
         android:layout_marginBottom="20dp"
-        android:layout_weight="2"
+        android:layout_weight="3"
         android:scrollbars="vertical"
-        android:background="@drawable/draw_bound"/>
+        android:background="@drawable/draw_bound"
+        android:hint="#태그1#태그2..."/>
 
     <Button
         android:id="@+id/addButton"

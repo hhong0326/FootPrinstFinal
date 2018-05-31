@@ -4,11 +4,14 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.example.lee.footprints.Picture;
 import com.example.lee.footprints.R;
+import com.example.lee.footprints.fragment.MapFragment;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -23,18 +26,21 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class FindPicActivity extends Activity {
 
     FindPictures findPictures;
-    String picID;
-    PictureList[] pictureLists;
+    String picID; // intent로 넘어온 누른 태그
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_findpictures);
 
         Intent intent = getIntent();
         picID = intent.getStringExtra("PIC_ID");
@@ -47,21 +53,13 @@ public class FindPicActivity extends Activity {
         super.onDestroy();
         findPictures = null;
     }
-    public class PictureList {
-        String user_account;
-        String username;
-        String filename;
-        String picname_thumb;
-        Double latitude;
-        Double longitude;
-        String tags;
-    }
+
     public class FindPictures extends AsyncTask<String, Integer, Void> {
 
         public static final int DOWNLOAD_PROGRESS = 0;
 
-        private final String url_Address = "http://footprints.gonetis.com:8080/moo/searchjson";
-
+        String url_Address = "http://footprints.gonetis.com:8080/moo/searchjson";
+        String thumb_url_Address = "http://footprints.gonetis.com:8080/moo/resources/thumbnails/";
         private ProgressDialog dialog;
         Context mContext;
 
@@ -90,11 +88,7 @@ public class FindPicActivity extends Activity {
                 builder.setCharset(Charset.forName("UTF-8"));
                 builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 
-                //builder.addTextBody("name", FirebaseAuth.getInstance().getCurrentUser().getEmail());
-                builder.addTextBody("keyword", picID);
-
-                //File file = new File(psth[0]);
-                //builder.addBinaryBody("file", file, ContentType.DEFAULT_BINARY, file.getName());
+                builder.addTextBody("keyword", URLEncoder.encode(picID,"UTF-8")); // keyword로서 태그를 보냄
 
                 HttpEntity entity = builder.build();
                 httpPost.setEntity(entity);
@@ -105,21 +99,17 @@ public class FindPicActivity extends Activity {
                 JSONArray jsonArray = new JSONArray(body);
                 StringBuffer sb = new StringBuffer();
 
-                pictureLists = new PictureList[jsonArray.length()];
+                //allPic 올 삭제
+                MapFragment.allPic.clear();
 
                 //데이터 뽑는 부분
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                    pictureLists[i] = new PictureList();
-
-                    pictureLists[i].user_account = jsonObject.getString("user_account");
-                    pictureLists[i].username = jsonObject.getString("username");
-                    pictureLists[i].filename = jsonObject.getString("fileName");
-                    pictureLists[i].picname_thumb = jsonObject.getString("thumbPicName");
-                    pictureLists[i].latitude = jsonObject.getDouble("latitude");
-                    pictureLists[i].longitude = jsonObject.getDouble("longitude");
-                    pictureLists[i].tags = jsonObject.getString("tags");
+                    // allPic에 검색해서 가져온 요소들 add
+                    MapFragment.allPic.add(new Picture(jsonObject.getDouble("latitude"),jsonObject.getDouble("longitude"),
+                            BitmapFactory.decodeStream((InputStream) new URL(thumb_url_Address + jsonObject.getString("thumbPicName")).getContent()),
+                            jsonObject.getString("fileName"),jsonObject.getString("user_account"),jsonObject.getString("username"),jsonObject.getString("tags")));
 
                 }
             } catch (Exception e) {
@@ -140,9 +130,7 @@ public class FindPicActivity extends Activity {
 
         @Override
         protected void onPostExecute(Void result) {
-            for(int i=0;i<pictureLists.length;i++) {
-                Log.i("PICTURELISTS!!!!!!!!", pictureLists[i].user_account+"|"+pictureLists[i].username+"|"+pictureLists[i].filename+"|"+pictureLists[i].picname_thumb+"|"+pictureLists[i].latitude+"|"+pictureLists[i].longitude+"|"+pictureLists[i].tags);
-            }
+            finish(); // 끝나면 올 종료~
         }
     }
 }

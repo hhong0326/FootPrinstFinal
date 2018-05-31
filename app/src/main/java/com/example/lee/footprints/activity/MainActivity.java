@@ -2,12 +2,10 @@ package com.example.lee.footprints.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Address;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -22,27 +20,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.lee.footprints.BackPressCloseHandler;
 import com.example.lee.footprints.fragment.MapFragment;
 import com.example.lee.footprints.R;
 import com.example.lee.footprints.fragment.SettingFragment;
-import com.example.lee.footprints.fragment.TimelineFragment;
 import com.example.lee.footprints.adapter.Adapter;
-import com.example.lee.footprints.fragment.ARFragment;
+import com.example.lee.footprints.fragment.TimelineFragment;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-/**
- * Created by choi on 2018-03-26.
- */
 
 public class MainActivity extends AppCompatActivity {
 
     TabLayout tabLayout;
     ViewPager viewPager;
     Adapter fragmentPagerAdapter;
-   // private int RESULT_PERMISSIONS = 100;
+
+    private BackPressCloseHandler backPressCloseHandler; // 두번 뒤로가기하면 종료되는 핸들러!
 
     LocationManager manager;
 
@@ -56,8 +50,14 @@ public class MainActivity extends AppCompatActivity {
         initViewPager();
 
         startLocationService();
+        backPressCloseHandler = new BackPressCloseHandler(this);
 
     }
+    @Override
+    public void onBackPressed() {
+        backPressCloseHandler.onBackPressed();
+    }
+
     @SuppressLint("MissingPermission")
     private void startLocationService() {
 
@@ -150,43 +150,29 @@ public class MainActivity extends AppCompatActivity {
         if (permissionCheck3 == PackageManager.PERMISSION_DENIED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
     }
-/*
-    public boolean requestPermissionCamera(){
-        int sdkVersion = Build.VERSION.SDK_INT;
-        if(sdkVersion >= Build.VERSION_CODES.M) {
-
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.CAMERA},
-                        RESULT_PERMISSIONS);
-
-            }
-        }
-
-        return true;
-    }
-*/
 
     private void initViewPager() {
         viewPager = (ViewPager)findViewById(R.id.view_pager);
 
         List<Fragment> listFragments = new ArrayList<>();
+
+        // 차례로 fragment 투입
         listFragments.add(new TimelineFragment());
         listFragments.add(new MapFragment());
-        listFragments.add(new ARFragment());
         listFragments.add(new SettingFragment());
+
         fragmentPagerAdapter = new Adapter(getSupportFragmentManager(),listFragments);
         viewPager.setAdapter(fragmentPagerAdapter);
         tabLayout = (TabLayout)findViewById(R.id.tabs);
-        tabLayout.addTab(tabLayout.newTab().setText("타임라인"));
-        tabLayout.addTab(tabLayout.newTab().setText("지도"));
-        tabLayout.addTab(tabLayout.newTab().setText("카메라"));
-        tabLayout.addTab(tabLayout.newTab().setText("설정"));
 
+        // 탭에 넣은 아이콘..
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.ar));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.map));
+        tabLayout.addTab(tabLayout.newTab().setIcon(R.drawable.setting));
+        
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        viewPager.setCurrentItem(2);
-        viewPager.setOffscreenPageLimit(3);
+        viewPager.setCurrentItem(1); // 초기에 어느탭에서 시작할 것인가
+        viewPager.setOffscreenPageLimit(2); // 다른 탭으로 갈시 멀리있는 탭이 삭제되지 않는다 (탭이 3개뿐이니 지웠다 만들었다 하는것보다 나을거같다)
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -196,13 +182,8 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case 1:
                         viewPager.setCurrentItem(tab.getPosition());
-
                         break;
                     case 2:
-                        viewPager.setCurrentItem(tab.getPosition());
-
-                        break;
-                    case 3:
                         viewPager.setCurrentItem(tab.getPosition());
                         break;
                 }

@@ -27,7 +27,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.example.lee.footprints.R;
-
+///// 로그인쪽은 다시 새로 잘 넣어줄거라 생각함
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener, ValueAnimator.AnimatorUpdateListener{
     private static final String TAG = "LoginActivity";
     private static final int RC_SIGN_IN = 0;
@@ -37,6 +37,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private SignInButton signInButton;
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
+    boolean Login = true;
 
     @SuppressLint("RestrictedApi")
     @Override
@@ -58,7 +59,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         animator.addUpdateListener(this);
         animator.setDuration(20000)
                 .start();
-
         // 로그인 Button 설정
         signInButton = (SignInButton)findViewById(R.id.sign_in_button);
         signInButton.setSize(SignInButton.SIZE_WIDE);
@@ -101,8 +101,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         super.onStart();
         // 이전 실행 시 로그인되어 있으면 바로 MainActivity를 실행한다
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null)
+        Intent intent = getIntent();
+        Login = intent.getBooleanExtra("Login",true);
+        Log.i("ASDF", "로그11: " + Login);
+        if (currentUser != null){
+            Log.i("ASDF", "ㄱㄱ: " + Login);
             getUserProfile(currentUser);
+
+        }
     }
 
     /* == 로그인 처리 함수들 == */
@@ -110,6 +116,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.sign_in_button) {
+            Log.i("ASDF", "로: " + Login);
             signInButton.setVisibility(Button.INVISIBLE); //로그인 버튼 숨김
             signIn();
         }
@@ -124,16 +131,18 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.i("ASDF", "로그1111232111: " + Login);
 
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
-            @SuppressLint("RestrictedApi") Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                @SuppressLint("RestrictedApi") Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 Log.w(TAG, "구글 로그인 결과:성공");
                 Toast.makeText(this, "구글 계정으로 로그인 되었습니다", Toast.LENGTH_SHORT).show();
                 firebaseAuthWithGoogle(account);
+                Login = true;
             } catch (ApiException e) {
                 // Google Sign In failed, update UI appropriately
                 Log.w(TAG, "Google sign in failed", e);
@@ -142,6 +151,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 // [END_EXCLUDE]
             }
         }
+
     }
 
 

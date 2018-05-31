@@ -1,5 +1,6 @@
 package com.example.lee.footprints.model;
 
+// 검색시 리스트뷰 한칸에 들어갈 요소
 public class Tag {
     private String id;
     private int num;

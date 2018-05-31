@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.lee.footprints" >
+    package="com.example.lee.footprints">
+
     <uses-feature android:name="android.hardware.camera" />
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.hardware.camera.autofocus" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -15,11 +16,26 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:largeHeap="true">
-        <activity android:name=".activity.LoginActivity"
+        android:theme="@style/AppTheme">
+        <meta-data
+            android:name="com.viromedia.API_KEY"
+            android:value="7FDAF6FD-6545-4CFA-A178-97E000278552" />
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.example.lee.footprints.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
+
+        <activity
+            android:name=".activity.LoginActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,23 +43,35 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.MainActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".activity.FindActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".activity.AddActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".activity.UserProfileActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".activity.ImageActivity"
-            android:theme="@android:style/Theme.Dialog"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".activity.FindPicActivity"
-            android:theme="@android:style/Theme.Dialog"
-            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".activity.MainActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.FindActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.AddActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.UserProfileActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.ImageActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity
+            android:name=".activity.FindPicActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Dialog" />
+
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="optional" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAxpXc1BuYXySMuxJxQrwbywywEbgONs50" />
+
+        <activity android:name=".activity.ImageActivityAR"></activity>
     </application>
 
 </manifest>

@@ -8,59 +8,75 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="100dp"
         android:layout_marginLeft="40dp"
         android:layout_marginRight="40dp"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="20dp"
+        android:orientation="vertical">
 
         <ImageView
             android:id="@+id/profileimg"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginRight="10dp"
-            android:background="@drawable/draw_bound" />
+            android:layout_gravity="center"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingTop="40dp">
 
             <TextView
                 android:id="@+id/email"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center" />
             <EditText
                 android:id="@+id/nickname"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="닉네임"/>
+                android:hint="닉네임"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:background="@null"
+                android:paddingTop="10dp"/>
             <EditText
                 android:id="@+id/intro"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="자기소개~"/>
+                android:hint="자기소개~"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:background="@null"
+                android:paddingTop="10dp"/>
 
         </LinearLayout>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_gravity="center">
         <Button
             android:layout_marginLeft="40dp"
             android:id="@+id/accept"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="accept"/>
+            android:text="accept"
+            android:layout_weight="1"/>
 
         <Button
             android:id="@+id/reset"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="reset"/>
+            android:text="reset"
+            android:layout_weight="1"/>
 
         <Button
+            android:layout_marginRight="40dp"
             android:id="@+id/logout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Logout" />
+            android:text="Logout"
+            android:layout_weight="1"/>
     </LinearLayout>
 </LinearLayout>

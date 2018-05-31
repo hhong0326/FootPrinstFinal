@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -36,6 +37,7 @@ import org.apache.http.params.CoreProtocolPNames;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 
 public class AddActivity extends AppCompatActivity {
@@ -53,14 +55,14 @@ public class AddActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
 
-        uploadFile = new UploadFile(this);
-
         imageView = (ImageView)findViewById(R.id.imageView);
+
+        imageView.setImageResource(R.drawable.img);
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                // 휴대폰 갤러리 불러오는 코드
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
                 intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -75,6 +77,7 @@ public class AddActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                uploadFile = new UploadFile(AddActivity.this);
                 uploadFile.execute(filePath);
             }
         });
@@ -88,7 +91,7 @@ public class AddActivity extends AppCompatActivity {
                     fileUri = data.getData();
                     filePath = getPath(fileUri);
                     Bitmap image = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
-                    imageView.setImageBitmap(rotateImage(image, 90));
+                    imageView.setImageBitmap(image);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -99,7 +102,14 @@ public class AddActivity extends AppCompatActivity {
             }
         }
     }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        MapFragment.flag = true; //사진 올리는 화면에서 나가면 다시 모든 사진을 불러온다
+    }
+
     // 이미지 회전 함수
+    /*
     public Bitmap rotateImage(Bitmap src, float degree) {
 
         // Matrix 객체 생성
@@ -109,6 +119,7 @@ public class AddActivity extends AppCompatActivity {
         // 이미지와 Matrix 를 셋팅해서 Bitmap 객체 생성
         return Bitmap.createBitmap(src, 0, 0, src.getWidth(),src.getHeight(), matrix, true);
     }
+    */
     public String getPath(Uri uri){
         if (uri == null){
             return null;
@@ -144,6 +155,7 @@ public class AddActivity extends AppCompatActivity {
             dialog.setMessage("업로드중입니다.");
             dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             dialog.setProgress(0);
+            dialog.setCanceledOnTouchOutside(false);
             dialog.show();
         }
 
@@ -163,9 +175,8 @@ public class AddActivity extends AppCompatActivity {
                 builder.setCharset(Charset.forName("UTF-8"));
                 builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 
-                builder.addTextBody("name", FirebaseAuth.getInstance().getCurrentUser().getEmail());
-                //builder.addTextBody("user_account", "aaa@bbb.ccc");
-                builder.addTextBody("message", editText.getText().toString());
+                builder.addTextBody("user_account", FirebaseAuth.getInstance().getCurrentUser().getEmail());
+                builder.addTextBody("message", URLEncoder.encode(editText.getText().toString(),"UTF-8"));
 
                 File file = new File(psth[0]);
                 builder.addBinaryBody("file", file, ContentType.DEFAULT_BINARY, file.getName());
@@ -194,7 +205,7 @@ public class AddActivity extends AppCompatActivity {
         protected void onPostExecute(Void result){
             try{
                 dialog.dismiss();
-                imageView.setImageResource(0);
+                imageView.setImageResource(R.drawable.img);
                 editText.setText("");
             }catch (Exception e){
 

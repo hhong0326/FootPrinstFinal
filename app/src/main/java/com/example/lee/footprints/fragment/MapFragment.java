@@ -55,6 +55,7 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -69,38 +70,27 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
     private MapView mapView = null;
     private GoogleApiClient googleApiClient = null;
     private View layout;
-    private LinearLayout linear;
+    private LinearLayout linear; // 맵 아래 스크롤바의 레이아웃
     private GoogleMap mMap;
     private ClusterManager<Picture> mClusterManager;
-    private LocationManager locationManager;
-
+    public static boolean flag = true;
     private RequestJson requestJson;
-    private RequestImage requestImage;
+
     private SetImageView setImageView;
 
-    private String[] useraccountArray;
-    private String[] usernameArray;
-    private String[] thumbArray;
-    private String[] fileUrlArray;
-    private Double[] latArray;
-    private Double[] lngArray;
-    private String[] tagArray;
-
-    private int num; //총 받은 사진개수
+    public static ArrayList<Picture> allPic = new ArrayList<Picture>(); // 현재 맵에 올라와있는 마커의 list -> 처음엔 전체를 가져오니 이걸 ARFragment에서 활용하면 될거같다
 
     private double currentLat;
     private double currentLng;
-    private Bitmap[] image = null;
 
     private com.example.lee.footprints.Location currentLocation = null;
     private MyClusterRenderer myClusterRenderer;
-    public static Vector<Picture> picCollection = new Vector<Picture>();
-    private int tag = -1;
+    public static Vector<Picture> picCollection = new Vector<Picture>(); // 현재 맵 아래 스크롤에 올라와있는 것들의 list
+    private int tag = -1; // 이걸로 스크롤 사진들의 순서를 매긴다
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -116,7 +106,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
             //preload 될때(전페이지에 있을때)
             layout = null;
             requestJson = null;
-            requestImage = null;
         }
     }
     @Override
@@ -133,7 +122,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
 
         if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             linear = (LinearLayout) layout.findViewById(R.id.linear);
-            //paths = getPathOfAllImages();
         }
 
         mapView = (MapView) layout.findViewById(R.id.map);
@@ -168,81 +156,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
         return layout;
     }
 
-    public void refreshItems() {
-        Log.e("REFRESH","refresh");
-        requestJson=null;
-        requestImage=null;
-        if(mClusterManager!=null)
-            mClusterManager.clearItems();
-        requestJson = new RequestJson(getActivity());
-        requestImage = new RequestImage(getActivity());
-        //백그라운드 작업 실행
-        requestJson.execute();
-    }
-    /*
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        //ACCESS_COARSE_LOCATION 권한
-        if(requestCode==1){
-            //권한받음
-            if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
-                requestMyLocation();
-            }
-            //권한못받음
-            else{
-                Toast.makeText(getActivity(), "권한없음", Toast.LENGTH_SHORT).show();
-
-            }
-        }
-    }
-    //나의 위치 요청
-    public void requestMyLocation(){
-        if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            return;
-        }
-        //요청
-        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,10,locationListener);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,1000,10,locationListener);
-    }
-    //위치정보 구하기 리스너
-    LocationListener locationListener = new LocationListener() {
-        @Override
-        public void onLocationChanged(Location location) {
-            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                    ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            currentLat = location.getLatitude();
-            currentLng = location.getLongitude();
-            Log.e("lat",Double.toString(currentLat));
-            Log.e("lng",Double.toString(currentLng));
-
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLat,currentLng),16));
-            //나의 위치를 한번만 가져오기 위해
-            locationManager.removeUpdates(locationListener);
-
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) { Log.d("gps", "onStatusChanged"); }
-
-        @Override
-        public void onProviderEnabled(String provider) { }
-
-        @Override
-        public void onProviderDisabled(String provider) { }
-    };
-*/
-    public static MapFragment newInstance() {
-
-        Bundle args = new Bundle();
-
-        MapFragment fragment = new MapFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onStart() {
         super.onStart();
@@ -267,11 +180,30 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
     @Override
     public void onResume() {
         super.onResume();
-        refreshItems();
-        Log.e("RESUME","REFRESH");
         mapView.onResume();
+        // 초기실행시, AddActivity에서 뒤로가기시, 검색창에서 아무것도 하지않고 뒤로가기시 flag는 true다 : 모든 사진 가져온다
+        if(flag == true) {
+            requestJson = null;
+            requestJson = new RequestJson(getActivity());
+
+            //백그라운드 작업 실행
+            requestJson.execute();
+
+            flag = false;
+        }
         if ( googleApiClient != null)
             googleApiClient.connect();
+
+        // 모든사진을 가져오든 뭘하든 마커를 재설정해야한다
+        if(mClusterManager!=null) {
+            mClusterManager.clearItems();
+            for (int i = 0; i < allPic.size(); i++) {
+                addItem(allPic.get(i));
+            }
+
+            mClusterManager.cluster();
+        }
+        Log.e("FLAG!!!!!!!!!!!!",Boolean.toString(flag));
     }
 
     @Override
@@ -279,7 +211,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
         super.onPause();
         mapView.onPause();
         if ( googleApiClient != null && googleApiClient.isConnected()) {
-            //LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
             googleApiClient.disconnect();
         }
     }
@@ -299,7 +230,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
             googleApiClient.unregisterConnectionFailedListener(this);
 
             if ( googleApiClient.isConnected()) {
-                //LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
                 googleApiClient.disconnect();
             }
         }
@@ -318,7 +248,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
             mapView.onCreate(savedInstanceState);
         }
     }
-    CameraPosition[] mPreviousCameraPosition = {null};
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -344,7 +274,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
             public boolean onClusterItemClick(Picture picture) {
                 cleanImageView();
 
-                tag++;
+                tag++; // tag를 0으로 만든다
                 picCollection.add(picture);
                 setImageView = new SetImageView(picture.getImage());
                 setImageView.execute();
@@ -380,25 +310,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
 
     }
 
-    // 임의의 좌표 투입
-    private void addItem(Double lat, Double lng, Bitmap image, String fileURL, String useraccount, String username, String tags) {
-        String latString = String.format("%.6f", lat);
-        String lngString = String.format("%.6f", lng);
-        mClusterManager.addItem(new Picture(Double.parseDouble(latString), Double.parseDouble(lngString), image, fileURL, useraccount, username, tags));
+    // 마커 add
+    private void addItem(Picture picture) {
+        mClusterManager.addItem(picture);
     }
-/*
-    public void setImageView(Bitmap image) {
 
-        ImageView imageView = new ImageView(getActivity());
-
-        linear.addView(imageView);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        imageView.setAdjustViewBounds(true);
-
-        imageView.setImageBitmap(image);
-        Log.e("IMAGES","IMAGEVIEWS ADDED");
-    }
-*/
+    // 스크롤 이미지들을 비운다
     public void cleanImageView() {
         linear.removeAllViews();
         setImageView = null;
@@ -418,58 +335,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
                 .build();
         googleApiClient.connect();
     }
-    /*
-    public boolean checkLocationServicesStatus() {
-        LocationManager locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
-
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-    }
-*/
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        /*
-        if ( !checkLocationServicesStatus()) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle("위치 서비스 비활성화");
-            builder.setMessage("앱을 사용하기 위해서는 위치 서비스가 필요합니다.\n" +
-                    "위치 설정을 수정하십시오.");
-            builder.setCancelable(true);
-            builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    Intent callGPSSettingIntent =
-                            new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    startActivityForResult(callGPSSettingIntent, GPS_ENABLE_REQUEST_CODE);
-                }
-            });
-            builder.setNegativeButton("취소", new DialogInterface.OnClickListener(){
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.cancel();
-                }
-            });
-            builder.create().show();
-        }
-
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(UPDATE_INTERVAL_MS);
-        locationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_MS);
-
-        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if ( ActivityCompat.checkSelfPermission(getActivity(),
-                    Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-            }
-        } else {
-
-            mMap.getUiSettings().setCompassEnabled(true);
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
-        }
-*/
-    }
+    public void onConnected(@Nullable Bundle bundle) { }
 
     @Override
     public void onConnectionSuspended(int cause) {
@@ -486,47 +354,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
-/*
-    // 모든 사진파일 경로 가져와서 ArrayList에 저장 + 앱 구동시 모든 경로 Log 출력
-    private ArrayList<String> getPathOfAllImages()
-    {
-        ArrayList<String> result = new ArrayList<>();
-        Uri uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        String[] projection = { MediaStore.MediaColumns.DATA, MediaStore.MediaColumns.DISPLAY_NAME };
 
-        Cursor cursor = getActivity().getApplicationContext().getContentResolver().query(uri, projection, null, null, MediaStore.MediaColumns.DATE_ADDED + " desc");
-        int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-        int columnDisplayname = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
-
-        int lastIndex;
-        while (cursor.moveToNext())
-        {
-            String absolutePathOfImage = cursor.getString(columnIndex);
-            String nameOfFile = cursor.getString(columnDisplayname);
-            lastIndex = absolutePathOfImage.lastIndexOf(nameOfFile);
-            lastIndex = lastIndex >= 0 ? lastIndex : nameOfFile.length() - 1;
-
-            if (!TextUtils.isEmpty(absolutePathOfImage))
-            {
-                result.add(absolutePathOfImage);
-            }
-        }
-
-        for (String string : result)
-        {
-            Log.i("getPathOfAllImages", "|" + string + "|");
-        }
-        picnum = result.size();
-
-        return result;
-    }
-*/
     public class RequestJson extends AsyncTask<Void, Integer, Void> {
 
         public static final int DOWNLOAD_PROGRESS = 0;
 
         private final String url_Address = "http://footprints.gonetis.com:8080/moo/jsonrequest";
-
+        String thumb_url_Address = "http://footprints.gonetis.com:8080/moo/resources/thumbnails/";
         private ProgressDialog dialog;
         Context mContext;
 
@@ -537,6 +371,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
         @Override
         protected void onPreExecute(){
             super.onPreExecute();
+            dialog = new ProgressDialog(mContext);
+            dialog.setMessage("로딩중입니다.");
+            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            dialog.setProgress(0);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+
+            if(mClusterManager!=null) {
+                mClusterManager.clearItems();
+                allPic.clear();
+            }
         }
 
         @Override
@@ -557,42 +402,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
                 JSONArray jsonArray = new JSONArray(body);
                 StringBuffer sb = new StringBuffer();
 
-                useraccountArray = new String[jsonArray.length()];
-                usernameArray = new String[jsonArray.length()];
-                thumbArray = new String[jsonArray.length()];
-                fileUrlArray = new String[jsonArray.length()];
-                latArray = new Double[jsonArray.length()];
-                lngArray = new Double[jsonArray.length()];
-                tagArray = new String[jsonArray.length()];
-
-
-
-                num = jsonArray.length();
-
                 //데이터 뽑는 부분
                 for(int i=0; i<jsonArray.length(); i++){
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
-                    String userAccount = jsonObject.getString("user_account");
-                    String userName = jsonObject.getString("username");
-                    String thumbName = jsonObject.getString("thumbPicName");
-                    String fileName = jsonObject.getString("fileName");
-                    Double latitude = jsonObject.getDouble("latitude");
-                    Double longitude = jsonObject.getDouble("longitude");
-                    String tags = jsonObject.getString("tags");
 
-                    useraccountArray[i] = userAccount;
-                    usernameArray[i] = userName;
-                    thumbArray[i] = thumbName;
-                    fileUrlArray[i] = fileName;
-                    latArray[i] = latitude;
-                    lngArray[i] = longitude;
-                    tagArray[i] = tags;
+                    // allPic에 모든 사진을 더한다
+                    allPic.add(new Picture(jsonObject.getDouble("latitude"),jsonObject.getDouble("longitude"),
+                            BitmapFactory.decodeStream((InputStream) new URL(thumb_url_Address + jsonObject.getString("thumbPicName")).getContent()),
+                            jsonObject.getString("fileName"),jsonObject.getString("user_account"),jsonObject.getString("username"),jsonObject.getString("tags")));
 
-                    //테스트용으로 출력할 문장 저장
-                    sb.append(
-                            "파일명 : " + thumbName + "\n위도 : " + latitude + "\n경도 : " + longitude + "\n\n"
-                    );
-                    //textView.setText(sb.toString());
                 }
 
             }catch (Exception e){
@@ -608,67 +426,26 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
         @Override
         protected void onProgressUpdate(Integer... progress){
             super.onProgressUpdate(progress);
+            dialog.setProgress((int)progress[0]);
         }
 
         @Override
         protected void onPostExecute(Void result){
-            requestImage.execute();
-        }
 
-    }
-    public class RequestImage extends AsyncTask <Void, Integer, Void> {
-
-        Context mContext;
-        //String url_Address = "http://footprints.gonetis.com:8080/moo/resources/";
-        String thumb_url_Address = "http://footprints.gonetis.com:8080/moo/resources/thumbnails/";
-
-        public RequestImage(Context context) {
-            mContext = context;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            try {
-                /*if (image != null)
-                    for (int i = 0; i < image.length; i++)
-                        image[i].recycle();*/
-                image = null;
-                image = new Bitmap[num];
-
-                for (int i = 0; i < num; i++) {
-                    image[i] = BitmapFactory.decodeStream((InputStream) new URL(thumb_url_Address + thumbArray[i]).getContent());
-                    Log.e("THUMB",thumb_url_Address + thumbArray[i]);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... progress) {
-            super.onProgressUpdate(progress);
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            for (int i = 0; i < num; i++) {
-                //if(getDistance(latArray[i],lngArray[i],currentLat,currentLng)<=1000) //meter 단위
-                addItem(latArray[i], lngArray[i], image[i], fileUrlArray[i], useraccountArray[i], usernameArray[i], tagArray[i]);
+            // 모든 사진을 가져오는게 끝나면 마커 더한다
+            for (int i = 0; i < allPic.size(); i++) {
+                addItem(allPic.get(i));
             }
             Log.e("addItem", "gogogogogo");
             mClusterManager.cluster();
-        }
-    }
-    public class SetImageView extends AsyncTask<Void, Integer, Void> {
+            dialog.dismiss();
 
+        }
+
+    }
+
+    // 마커를 눌렀을때 스크롤에 띄우는 쓰레드
+    public class SetImageView extends AsyncTask<Void, Integer, Void> {
 
         Bitmap mImage;
         ImageView imageView;
@@ -681,7 +458,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
         protected void onPreExecute() {
             super.onPreExecute();
             imageView = new ImageView(getActivity());
-            imageView.setTag(tag);Log.e("tags",Integer.toString(tag));
+            imageView.setTag(tag); // 스크롤 이미지들에 순서를 매긴다
         }
 
         @Override
@@ -697,68 +474,24 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,GoogleAp
 
         @Override
         protected void onPostExecute(Void result) {
-
+            imageView.setPadding(5,0,0,0);
             linear.addView(imageView);
             imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             imageView.setAdjustViewBounds(true);
 
             imageView.setImageBitmap(mImage);
 
-
             Log.e("IMAGES", "IMAGEVIEWS ADDED");
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         Intent intent = new Intent(getActivity(), ImageActivity.class);
-                        intent.putExtra("PIC_NUM",(int)view.getTag());
+                        intent.putExtra("PIC_NUM",(int)view.getTag()); // 자신이 누른 index를 보냄
                         startActivity(intent);
                     }
                 });
 
         }
     }
-    /*
-    public class SetLocation extends AsyncTask<Void, Integer, Void> {
-
-        public SetLocation() {
-
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... progress) {
-            super.onProgressUpdate(progress);
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            locationManager = (LocationManager)getActivity().getSystemService(LOCATION_SERVICE);
-            requestMyLocation();
-        }
-    }
-    */
-/* 현재좌표와 마커와의 거리를 여기서 계산해야 하나??
-    public double getDistance(Double lat1, Double lng1, Double lat2, Double lng2) {
-        double distance = 0;
-        Location locationA = new Location("pictureLocation");
-        locationA.setLatitude(lat1);
-        locationA.setLongitude(lng1);
-        Location locationB = new Location("currentLocation");
-        locationB.setLatitude(lat2);
-        locationB.setLongitude(lng2);
-        distance = locationA.distanceTo(locationB);
-
-        return distance;
-    }
-*/
 
 }

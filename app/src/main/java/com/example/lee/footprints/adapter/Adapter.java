@@ -7,10 +7,7 @@ import android.view.View;
 
 import java.util.List;
 
-/**
- * Created by choi on 2018-03-26.
- */
-
+// 메인 뷰페이저 어댑터
 public class Adapter extends FragmentPagerAdapter {
     List<Fragment> listFragments;
 

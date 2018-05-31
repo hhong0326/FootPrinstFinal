@@ -15,9 +15,10 @@ import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
+// 검색시 리스트뷰 어댑터
 public class ListAdapter extends BaseAdapter{
     private LayoutInflater inflater;
-    private ArrayList<Tag> data;
+    private ArrayList<Tag> data; // Tag(태그, 사진개수)에 대한 리스트
     private int layout;
     public ListAdapter(Context context, ArrayList<Tag> data, int layout){
         this.inflater=(LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -32,6 +33,8 @@ public class ListAdapter extends BaseAdapter{
     public long getItemId(int position){return position;}
     @Override
     public View getView(int position, View convertView, ViewGroup parent){
+
+        // 리스트 하나하나에 표시할 뷰
         if(convertView==null){
             convertView=inflater.inflate(R.layout.item, null);
         }

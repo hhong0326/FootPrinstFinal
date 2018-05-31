@@ -21,6 +21,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.example.lee.footprints.R;
 
+
 /* 처음 로그인했을 때 사용자 프로필을 작성하는 Activity */
 public class UserProfileActivity extends AppCompatActivity implements View.OnClickListener {
     private int position;

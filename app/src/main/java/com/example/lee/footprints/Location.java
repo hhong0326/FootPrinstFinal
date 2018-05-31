@@ -2,6 +2,7 @@ package com.example.lee.footprints;
 
 import com.google.android.gms.maps.model.LatLng;
 
+// 대충 Location 만들었는데 쓸일이 없을거같다
 public class Location {
     private static Location singletonInstance;
 
