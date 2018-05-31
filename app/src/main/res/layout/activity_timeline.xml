@@ -52,7 +52,7 @@
             android:id="@+id/camera_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_camera"
+            android:src="@drawable/cam"
             android:maxWidth="90dp"
             android:maxHeight="90dp"
             android:adjustViewBounds="true"
